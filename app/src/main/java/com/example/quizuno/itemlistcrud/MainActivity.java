@@ -4,13 +4,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -18,8 +26,11 @@ public class MainActivity extends AppCompatActivity {
     EditText et_descrip;
     Spinner sp_spinner;
     Button btn_crear;
+    ListView lv_lista;
 
     DatabaseReference itemsDatabase;
+
+    List<Item> itemList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
         et_descrip = findViewById(R.id.et_descrip);
         sp_spinner = findViewById(R.id.sp_spinner);
         btn_crear = findViewById(R.id.btn_crear);
+        lv_lista = findViewById(R.id.lv_lista);
+
+        itemList = new ArrayList<>();
 
         btn_crear.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -41,6 +55,35 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        itemsDatabase.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                itemList.clear();
+
+                for(DataSnapshot  itemSnapshot : dataSnapshot.getChildren()){
+                    Item item = itemSnapshot.getValue(Item.class);
+
+                    itemList.add(item);
+
+
+                }
+
+                TareasList adapter = new TareasList(MainActivity.this, itemList);
+
+                lv_lista.setAdapter(adapter);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void addItems(){
